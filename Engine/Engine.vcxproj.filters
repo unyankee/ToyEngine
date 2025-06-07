@@ -84,6 +84,48 @@
     <ClCompile Include="..\extern\glfw\glfw-3.4\src\wgl_context.c">
       <Filter>glfw</Filter>
     </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\cocoa_time.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\glx_context.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\linux_joystick.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\posix_module.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\posix_poll.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\posix_thread.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\posix_time.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\wl_init.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\wl_monitor.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\wl_window.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\x11_init.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\x11_monitor.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\x11_window.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\glfw\glfw-3.4\src\xkb_unicode.c">
+      <Filter>glfw</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\extern\glfw\glfw-3.4\src\internal.h">
@@ -107,5 +149,64 @@
     <ClInclude Include="..\extern\glfw\glfw-3.4\src\null_platform.h">
       <Filter>glfw</Filter>
     </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\cocoa_joystick.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\cocoa_platform.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\cocoa_time.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\linux_joystick.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\mappings.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\platform.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\posix_poll.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\posix_thread.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\posix_time.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\wl_platform.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\x11_platform.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\glfw\glfw-3.4\src\xkb_unicode.h">
+      <Filter>glfw</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\extern\glfw\glfw-3.4\src\cocoa_init.m">
+      <Filter>glfw</Filter>
+    </None>
+    <None Include="..\extern\glfw\glfw-3.4\src\cocoa_joystick.m">
+      <Filter>glfw</Filter>
+    </None>
+    <None Include="..\extern\glfw\glfw-3.4\src\cocoa_monitor.m">
+      <Filter>glfw</Filter>
+    </None>
+    <None Include="..\extern\glfw\glfw-3.4\src\cocoa_window.m">
+      <Filter>glfw</Filter>
+    </None>
+    <None Include="..\extern\glfw\glfw-3.4\src\glfw.rc.in">
+      <Filter>glfw</Filter>
+    </None>
+    <None Include="..\extern\glfw\glfw-3.4\src\mappings.h.in">
+      <Filter>glfw</Filter>
+    </None>
+    <None Include="..\extern\glfw\glfw-3.4\src\nsgl_context.m">
+      <Filter>glfw</Filter>
+    </None>
   </ItemGroup>
 </Project>
