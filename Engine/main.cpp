@@ -34,11 +34,16 @@ class EngineInstance
 	VkPhysicalDevice PhysicalDevice;
 	//
 	GLFWwindow* window;
-	
+	//
 	VkDevice Device;
-	
+	//	
 	VkSurfaceKHR surface;
-
+	//
+	VkSwapchainKHR Swapchain;
+	//
+	uint32_t FamilyIndex = 0;
+	// 
+	std::vector<VkImage> SwapchainImages;
 
 	// Functions //
 	// This is not the best naming
@@ -54,8 +59,105 @@ class EngineInstance
 	void CreateDevice();
 	// Create/Get surface for rendering
 	void CreateSurface();
+	// 
+	void CreateSwapchain();
+	//
+	void MainLoop();
+
+	VkCommandPool CreateCommandPool();
 };
 
+
+void EngineInstance::MainLoop()
+{
+	VkSemaphore AquireSemaphone;
+	VkSemaphore submitSemaphore;
+	VkSemaphoreCreateInfo SemaphoreCreateInfo = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+	
+	vkCreateSemaphore(Device, &SemaphoreCreateInfo, nullptr, &AquireSemaphone);
+	vkCreateSemaphore(Device, &SemaphoreCreateInfo, nullptr, &submitSemaphore);
+
+	VkQueue Queue;
+	vkGetDeviceQueue(Device, FamilyIndex, 0, &Queue);
+
+	uint32_t swapchainImagesSount = 0;
+	vkGetSwapchainImagesKHR(Device, Swapchain, &swapchainImagesSount, nullptr);
+	SwapchainImages.resize(swapchainImagesSount);
+	vkGetSwapchainImagesKHR(Device, Swapchain, &swapchainImagesSount, SwapchainImages.data());
+
+	VkCommandPool CommandPool = CreateCommandPool();
+	
+	VkCommandBufferAllocateInfo AllocateInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
+	AllocateInfo.commandPool = CommandPool;
+	AllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	AllocateInfo.commandBufferCount = 1;
+
+	VkCommandBuffer CommandBuffer;
+	VK_CHECK(vkAllocateCommandBuffers(Device, &AllocateInfo, &CommandBuffer));
+	
+	while (!glfwWindowShouldClose(window)) 
+	{
+		glfwPollEvents();
+
+		// Main rendering loop for now
+		uint32_t ImageIndex = 0;
+		VK_CHECK(vkAcquireNextImageKHR(Device, Swapchain,  ~0ull, AquireSemaphone, VK_NULL_HANDLE, &ImageIndex));
+
+		VK_CHECK(vkResetCommandPool(Device, CommandPool, 0));
+
+
+		VkCommandBufferBeginInfo BeginInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
+		BeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		
+		
+		VK_CHECK(vkBeginCommandBuffer(CommandBuffer, &BeginInfo));
+
+		constexpr VkClearColorValue ClearColorValue = {27.0f/ 255.0f,3.0f / 255.0f,3.0f / 255.0f,1.0f};
+		VkImageSubresourceRange ImageSubresourceRamge = {};
+		ImageSubresourceRamge.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		ImageSubresourceRamge.levelCount = 1;
+		ImageSubresourceRamge.layerCount = 1;
+		
+		vkCmdClearColorImage(CommandBuffer, SwapchainImages[ImageIndex], VK_IMAGE_LAYOUT_GENERAL, &ClearColorValue, 1, &ImageSubresourceRamge);
+		
+		VK_CHECK(vkEndCommandBuffer(CommandBuffer));
+
+		VkPipelineStageFlags PipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		
+		VkSubmitInfo SubmitInfo = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
+		const void*                    pNext;
+		SubmitInfo.pWaitDstStageMask = &PipelineStageFlags;
+		SubmitInfo.waitSemaphoreCount = 1;
+		SubmitInfo.pWaitSemaphores = &AquireSemaphone;
+		SubmitInfo.commandBufferCount = 1;
+		SubmitInfo.pCommandBuffers = &CommandBuffer;
+		SubmitInfo.signalSemaphoreCount = 1;
+		SubmitInfo.pSignalSemaphores = &submitSemaphore;
+		
+		vkQueueSubmit(Queue, 1, &SubmitInfo, VK_NULL_HANDLE);
+		
+		VkPresentInfoKHR PresentInfo = {VK_STRUCTURE_TYPE_PRESENT_INFO_KHR};
+		PresentInfo.pImageIndices = &ImageIndex;
+		PresentInfo.pWaitSemaphores = &submitSemaphore;
+		PresentInfo.waitSemaphoreCount = 1;
+		PresentInfo.pSwapchains = &Swapchain;
+		PresentInfo.swapchainCount = 1;
+
+		VK_CHECK(vkQueuePresentKHR(Queue, &PresentInfo));
+		VK_CHECK(vkDeviceWaitIdle(Device));
+	}
+}
+
+VkCommandPool EngineInstance::CreateCommandPool()
+{
+	VkCommandPoolCreateInfo CommandPoolCreateInfo = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+	CommandPoolCreateInfo.queueFamilyIndex = FamilyIndex;
+	CommandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+
+	VkCommandPool CommandPool = VK_NULL_HANDLE;
+	VK_CHECK(vkCreateCommandPool(Device, &CommandPoolCreateInfo, nullptr, &CommandPool));
+	return CommandPool;
+}
 
 void EngineInstance::InitInstance()
 {
@@ -72,6 +174,9 @@ void EngineInstance::InitInstance()
 	const char* Extensions[]=
 		{
 		VK_KHR_SURFACE_EXTENSION_NAME,
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+#endif
 	};
 
 	InstanceInfo.ppEnabledExtensionNames = Extensions;
@@ -102,9 +207,8 @@ void EngineInstance::InitInstance()
 	
 	SelectPhysicalDevice();
 	CreateDevice();
-
-	
-	
+	CreateSurface();
+	CreateSwapchain();
 }
 
 void EngineInstance::SelectPhysicalDevice()
@@ -152,7 +256,7 @@ void EngineInstance::CreateDevice()
 	// But at the moment this is a shortcut
 	constexpr float QueuePriorities[] = {1.0f};
 	VkDeviceQueueCreateInfo DeviceQueueCreateInfo = {VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
-	DeviceQueueCreateInfo.queueFamilyIndex = 0;
+	DeviceQueueCreateInfo.queueFamilyIndex = FamilyIndex;
 	DeviceQueueCreateInfo.queueCount = 1;
 	DeviceQueueCreateInfo.pQueuePriorities = QueuePriorities;
 	
@@ -160,6 +264,17 @@ void EngineInstance::CreateDevice()
 	DeviceCreateInfo.queueCreateInfoCount = 1;
 	DeviceCreateInfo.pQueueCreateInfos = &DeviceQueueCreateInfo;
 
+	const char* Extensions[]=
+		{
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+#if defined(VK_USE_PLATFORM_WIN32_KHR)
+		
+#endif
+	};
+
+	DeviceCreateInfo.ppEnabledExtensionNames = Extensions;
+	DeviceCreateInfo.enabledExtensionCount = ARRAY_SIZE(Extensions);
+	
 	//DeviceCreateInfo.enabledExtensionCount;
 	//DeviceCreateInfo.ppEnabledExtensionNames;
 	//DeviceCreateInfo.pEnabledFeatures;
@@ -180,6 +295,35 @@ void EngineInstance::CreateSurface()
 #endif
 }
 
+void EngineInstance::CreateSwapchain()
+{
+
+	int32_t Width = 0;
+	int32_t Heigh = 0;
+	glfwGetWindowSize(window, &Width, &Heigh);
+	
+	VkSwapchainCreateInfoKHR SwapchainCreateInfo {VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
+	SwapchainCreateInfo.surface = surface;
+	SwapchainCreateInfo.minImageCount = 2;
+	SwapchainCreateInfo.imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
+	SwapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+	SwapchainCreateInfo.imageExtent.width = Width;
+	SwapchainCreateInfo.imageExtent.height = Heigh;
+	SwapchainCreateInfo.imageArrayLayers = 1;
+	SwapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	SwapchainCreateInfo.queueFamilyIndexCount = 1;
+	SwapchainCreateInfo.pQueueFamilyIndices = &FamilyIndex;
+	SwapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+
+	//SwapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	//SwapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+	
+	SwapchainCreateInfo.flags;
+	SwapchainCreateInfo.oldSwapchain = nullptr;
+	
+	VK_CHECK(vkCreateSwapchainKHR(Device, &SwapchainCreateInfo, nullptr, &Swapchain))
+}
+
 
 int main()
 {
@@ -192,11 +336,8 @@ int main()
 	// of external libraries as possible
 	EngineInstance Engine;
 	Engine.InitInstance();
-	
-	while (!glfwWindowShouldClose(Engine.window)) 
-	{
-		glfwPollEvents();
-	}
+
+	Engine.MainLoop();
 
 	glfwDestroyWindow(Engine.window);
 
