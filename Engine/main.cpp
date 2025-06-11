@@ -38,19 +38,36 @@ class EngineInstance
 	VkDevice Device;
 	//	
 	VkSurfaceKHR surface;
+	//	
+	VkSurfaceFormatKHR surfaceFormat;
 	//
 	VkSwapchainKHR Swapchain;
 	//
 	uint32_t FamilyIndex = 0;
-	// 
+	//
+	uint32_t swapchainImagesCount = 0;
+	//
 	std::vector<VkImage> SwapchainImages;
+	//
+	VkRenderPass RenderPass;
+	//
+	std::vector<VkFramebuffer> Framebuffer;
+	//
+	std::vector<VkImageView> SwapchainImageViews;
+	//
+	uint32_t Width = 1920;
+	uint32_t Height = 1080;
 
+	
 	// Functions //
 	// This is not the best naming
 	// Since Engine::InitInstance is way more general than what
 	// this function is actually doing.
 	// Should consider move it / rename it once what 
 	// it does changes over time
+	//
+	void MainLoop();
+	//
 	void InitInstance();
 	// Iterate over the list of physical devices and pick the one that
 	// looks better or matches better the requirements of the engine
@@ -60,10 +77,18 @@ class EngineInstance
 	// Create/Get surface for rendering
 	void CreateSurface();
 	// 
+	void GetSwapchainFormat();
+	//
 	void CreateSwapchain();
 	//
-	void MainLoop();
-
+	void createRenderpass();
+	//
+	void GetOrCreateSwapchainImages();
+	//
+	void createImageView();
+	//
+	void createFramebuffer();
+	
 	VkCommandPool CreateCommandPool();
 };
 
@@ -79,12 +104,7 @@ void EngineInstance::MainLoop()
 
 	VkQueue Queue;
 	vkGetDeviceQueue(Device, FamilyIndex, 0, &Queue);
-
-	uint32_t swapchainImagesSount = 0;
-	vkGetSwapchainImagesKHR(Device, Swapchain, &swapchainImagesSount, nullptr);
-	SwapchainImages.resize(swapchainImagesSount);
-	vkGetSwapchainImagesKHR(Device, Swapchain, &swapchainImagesSount, SwapchainImages.data());
-
+	
 	VkCommandPool CommandPool = CreateCommandPool();
 	
 	VkCommandBufferAllocateInfo AllocateInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
@@ -103,7 +123,7 @@ void EngineInstance::MainLoop()
 		uint32_t ImageIndex = 0;
 		VK_CHECK(vkAcquireNextImageKHR(Device, Swapchain,  ~0ull, AquireSemaphone, VK_NULL_HANDLE, &ImageIndex));
 
-		VK_CHECK(vkResetCommandPool(Device, CommandPool, 0));
+		VK_CHECK(vkResetCommandPool(Device, CommandPool, 0))
 
 
 		VkCommandBufferBeginInfo BeginInfo = {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
@@ -113,14 +133,28 @@ void EngineInstance::MainLoop()
 		VK_CHECK(vkBeginCommandBuffer(CommandBuffer, &BeginInfo));
 
 		constexpr VkClearColorValue ClearColorValue = {27.0f/ 255.0f,3.0f / 255.0f,3.0f / 255.0f,1.0f};
-		VkImageSubresourceRange ImageSubresourceRamge = {};
-		ImageSubresourceRamge.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		ImageSubresourceRamge.levelCount = 1;
-		ImageSubresourceRamge.layerCount = 1;
+		VkClearValue ClearValue = {ClearColorValue};
 		
-		vkCmdClearColorImage(CommandBuffer, SwapchainImages[ImageIndex], VK_IMAGE_LAYOUT_GENERAL, &ClearColorValue, 1, &ImageSubresourceRamge);
+		VkRenderPassBeginInfo RenderpassBeginInfo = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+		RenderpassBeginInfo.renderPass = RenderPass;
+		RenderpassBeginInfo.framebuffer = Framebuffer[ImageIndex];
+		RenderpassBeginInfo.renderArea.extent = {Width, Height};
+		RenderpassBeginInfo.renderArea.offset = {0,0};
+		RenderpassBeginInfo.clearValueCount = 1;
+		RenderpassBeginInfo.pClearValues = &ClearValue;
 		
-		VK_CHECK(vkEndCommandBuffer(CommandBuffer));
+		
+		vkCmdBeginRenderPass(CommandBuffer, &RenderpassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+
+		// Testing goes here!!
+			
+		
+		vkCmdEndRenderPass(CommandBuffer);
+		
+		//vkCmdClearColorImage(CommandBuffer, SwapchainImages[ImageIndex], VK_IMAGE_LAYOUT_GENERAL, &ClearColorValue, 1, &ImageSubresourceRamge);
+		
+		VK_CHECK(vkEndCommandBuffer(CommandBuffer))
 
 		VkPipelineStageFlags PipelineStageFlags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		
@@ -143,8 +177,8 @@ void EngineInstance::MainLoop()
 		PresentInfo.pSwapchains = &Swapchain;
 		PresentInfo.swapchainCount = 1;
 
-		VK_CHECK(vkQueuePresentKHR(Queue, &PresentInfo));
-		VK_CHECK(vkDeviceWaitIdle(Device));
+		VK_CHECK(vkQueuePresentKHR(Queue, &PresentInfo))
+		VK_CHECK(vkDeviceWaitIdle(Device))
 	}
 }
 
@@ -201,14 +235,19 @@ void EngineInstance::InitInstance()
 	VK_CHECK(vkEnumeratePhysicalDevices(Instance, &DeviceCount, PhysicalDevices.data()));
 	// with this data we can start selecting which device is the best one for us
 
-	const uint32_t WindowWidth = 1920;
-	const uint32_t WindowHeigh = 1080;
+	const uint32_t WindowWidth = Width;
+	const uint32_t WindowHeigh = Height;
 	window = glfwCreateWindow(WindowWidth, WindowHeigh, "OutterSpace", 0, 0);
 	
 	SelectPhysicalDevice();
 	CreateDevice();
 	CreateSurface();
+	GetSwapchainFormat();
 	CreateSwapchain();
+	GetOrCreateSwapchainImages();
+	createRenderpass();
+	createImageView();
+	createFramebuffer();
 }
 
 void EngineInstance::SelectPhysicalDevice()
@@ -295,6 +334,26 @@ void EngineInstance::CreateSurface()
 #endif
 }
 
+void EngineInstance::GetSwapchainFormat()
+{
+	uint32_t DeviceSurfaceCount = 0;
+	std::vector<VkSurfaceFormatKHR> SupportedFormats;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(PhysicalDevice, surface, &DeviceSurfaceCount, nullptr);
+	SupportedFormats.resize(DeviceSurfaceCount);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(PhysicalDevice, surface, &DeviceSurfaceCount, SupportedFormats.data());
+
+	uint32_t Candidate = 0;
+	for (uint32_t i = 0; i < DeviceSurfaceCount; i++)
+	{
+		if (SupportedFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB)
+		{
+			Candidate = i;
+		}
+	}
+
+	surfaceFormat = SupportedFormats[Candidate];
+}
+
 void EngineInstance::CreateSwapchain()
 {
 
@@ -305,7 +364,7 @@ void EngineInstance::CreateSwapchain()
 	VkSwapchainCreateInfoKHR SwapchainCreateInfo {VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
 	SwapchainCreateInfo.surface = surface;
 	SwapchainCreateInfo.minImageCount = 2;
-	SwapchainCreateInfo.imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
+	SwapchainCreateInfo.imageFormat = surfaceFormat.format;
 	SwapchainCreateInfo.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
 	SwapchainCreateInfo.imageExtent.width = Width;
 	SwapchainCreateInfo.imageExtent.height = Heigh;
@@ -313,15 +372,91 @@ void EngineInstance::CreateSwapchain()
 	SwapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	SwapchainCreateInfo.queueFamilyIndexCount = 1;
 	SwapchainCreateInfo.pQueueFamilyIndices = &FamilyIndex;
-	SwapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	SwapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	SwapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 
-	//SwapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	//SwapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+	SwapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
 	
-	SwapchainCreateInfo.flags;
 	SwapchainCreateInfo.oldSwapchain = nullptr;
 	
 	VK_CHECK(vkCreateSwapchainKHR(Device, &SwapchainCreateInfo, nullptr, &Swapchain))
+}
+
+void EngineInstance::createRenderpass()
+{
+	// This will be removed once we get rid of renderpasses later.
+	// just need this for the purpose of rendering something, but it will be removed
+	// soon, since the addition of dynamic rendering and removing renderpasses (and framebuffers)
+	VkAttachmentDescription attachment[1] = {};
+	attachment[0].format = surfaceFormat.format;
+	attachment[0].samples = VK_SAMPLE_COUNT_1_BIT;
+	attachment[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	attachment[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	attachment[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	attachment[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	attachment[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	attachment[0].finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkAttachmentReference ColorAttachments = {0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+
+	VkSubpassDescription Subpass = {};
+	Subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	Subpass.colorAttachmentCount = 1;
+	Subpass.pColorAttachments = &ColorAttachments;	
+	
+	VkRenderPassCreateInfo RenderPassCreateInfo {VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO};
+	RenderPassCreateInfo.attachmentCount = ARRAY_SIZE(attachment);
+	RenderPassCreateInfo.pAttachments = attachment;
+	RenderPassCreateInfo.subpassCount = 1;
+	RenderPassCreateInfo.pSubpasses = &Subpass;
+	
+	VK_CHECK(vkCreateRenderPass(Device, &RenderPassCreateInfo, nullptr, &RenderPass))
+}
+
+void EngineInstance::GetOrCreateSwapchainImages()
+{
+	swapchainImagesCount = 0;
+	vkGetSwapchainImagesKHR(Device, Swapchain, &swapchainImagesCount, SwapchainImages.data());
+	SwapchainImages.resize(swapchainImagesCount);
+	vkGetSwapchainImagesKHR(Device, Swapchain, &swapchainImagesCount, SwapchainImages.data());
+}
+
+void EngineInstance::createImageView()
+{
+	SwapchainImageViews.resize(swapchainImagesCount);
+	for (uint32_t i = 0; i < swapchainImagesCount; ++i)
+	{
+		VkImageViewCreateInfo ImageViewCreateInfo {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
+		ImageViewCreateInfo.image = SwapchainImages[i];
+		ImageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		ImageViewCreateInfo.format = surfaceFormat.format;
+
+		ImageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		ImageViewCreateInfo.subresourceRange.levelCount = 1;
+		ImageViewCreateInfo.subresourceRange.layerCount = 1;
+		
+		VK_CHECK(vkCreateImageView(Device, &ImageViewCreateInfo, nullptr, &SwapchainImageViews[i]))		
+	}
+	
+}
+
+void EngineInstance::createFramebuffer()
+{
+	Framebuffer.resize(swapchainImagesCount);
+	for (uint32_t i = 0; i < swapchainImagesCount; ++i)
+	{
+		VkFramebufferCreateInfo FramebufferCreateInfo {VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO};
+		FramebufferCreateInfo.flags;
+		FramebufferCreateInfo.renderPass = RenderPass;
+		FramebufferCreateInfo.attachmentCount = 1;
+		FramebufferCreateInfo.pAttachments = &SwapchainImageViews[i];
+		FramebufferCreateInfo.width = Width;
+		FramebufferCreateInfo.height = Height;
+		FramebufferCreateInfo.layers = 1;
+		
+		vkCreateFramebuffer(Device, &FramebufferCreateInfo, nullptr, &Framebuffer[i]);
+	}
+	
 }
 
 
