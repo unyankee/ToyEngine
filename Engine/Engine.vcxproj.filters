@@ -16,6 +16,9 @@
     <Filter Include="glfw">
       <UniqueIdentifier>{7498e892-24f5-46fa-88c5-209b5dc4c497}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{5e7d1038-9471-42e4-8c9e-b0d897ace335}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -207,6 +210,12 @@
     </None>
     <None Include="..\extern\glfw\glfw-3.4\src\nsgl_context.m">
       <Filter>glfw</Filter>
+    </None>
+    <None Include="Shaders\mesh.frag.glsl">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Shaders\mesh.vert.glsl">
+      <Filter>shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

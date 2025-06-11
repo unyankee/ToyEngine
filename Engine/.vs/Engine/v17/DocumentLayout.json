@@ -3,17 +3,25 @@
   "WorkspaceRootPath": "F:\\ToyEngine\\ToyEngine\\Engine\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{E7FD48B3-31A2-4F32-AF1A-491270A92C85}|Engine.vcxproj|F:\\ToyEngine\\ToyEngine\\Engine\\Shaders\\mesh.frag.glsl||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{E7FD48B3-31A2-4F32-AF1A-491270A92C85}|Engine.vcxproj|solutionrelative:Shaders\\mesh.frag.glsl||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E7FD48B3-31A2-4F32-AF1A-491270A92C85}|Engine.vcxproj|F:\\ToyEngine\\ToyEngine\\Engine\\Shaders\\mesh.vert.glsl||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{E7FD48B3-31A2-4F32-AF1A-491270A92C85}|Engine.vcxproj|solutionrelative:Shaders\\mesh.vert.glsl||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{E7FD48B3-31A2-4F32-AF1A-491270A92C85}|Engine.vcxproj|F:\\ToyEngine\\ToyEngine\\Engine\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{E7FD48B3-31A2-4F32-AF1A-491270A92C85}|Engine.vcxproj|solutionrelative:main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\OutterSpaceLocal\\extern\\glfw\\glfw-3.4\\src\\internal.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\VulkanSDK\\1.4.313.0\\Include\\vulkan\\vulkan_core.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\VulkanSDK\\1.4.313.0\\Include\\vulkan\\vulkan.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|F:\\OutterSpaceLocal\\extern\\glfw\\glfw-3.4\\src\\internal.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -23,11 +31,41 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 1,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "mesh.frag.glsl",
+              "DocumentMoniker": "F:\\ToyEngine\\ToyEngine\\Engine\\Shaders\\mesh.frag.glsl",
+              "RelativeDocumentMoniker": "Shaders\\mesh.frag.glsl",
+              "ToolTip": "F:\\ToyEngine\\ToyEngine\\Engine\\Shaders\\mesh.frag.glsl",
+              "RelativeToolTip": "Shaders\\mesh.frag.glsl",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-06-11T11:42:23.325Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "mesh.vert.glsl",
+              "DocumentMoniker": "F:\\ToyEngine\\ToyEngine\\Engine\\Shaders\\mesh.vert.glsl",
+              "RelativeDocumentMoniker": "Shaders\\mesh.vert.glsl",
+              "ToolTip": "F:\\ToyEngine\\ToyEngine\\Engine\\Shaders\\mesh.vert.glsl",
+              "RelativeToolTip": "Shaders\\mesh.vert.glsl",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-06-11T11:42:23.496Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "vulkan_core.h",
               "DocumentMoniker": "C:\\VulkanSDK\\1.4.313.0\\Include\\vulkan\\vulkan_core.h",
               "ToolTip": "C:\\VulkanSDK\\1.4.313.0\\Include\\vulkan\\vulkan_core.h",
@@ -44,14 +82,14 @@
               "RelativeDocumentMoniker": "..\\..\\..\\OutterSpaceLocal\\extern\\glfw\\glfw-3.4\\src\\internal.h",
               "ToolTip": "F:\\OutterSpaceLocal\\extern\\glfw\\glfw-3.4\\src\\internal.h",
               "RelativeToolTip": "..\\..\\..\\OutterSpaceLocal\\extern\\glfw\\glfw-3.4\\src\\internal.h",
-              "ViewState": "AgIAAB8BAAAAAAAAAAAmwDQBAAAKAAAAAAAAAA==",
+              "ViewState": "AgIAAB8BAAAAAAAAAAAmwC0BAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-05-11T11:47:02.621Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "vulkan.h",
               "DocumentMoniker": "C:\\VulkanSDK\\1.4.313.0\\Include\\vulkan\\vulkan.h",
               "ToolTip": "C:\\VulkanSDK\\1.4.313.0\\Include\\vulkan\\vulkan.h",
@@ -62,13 +100,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "main.cpp",
               "DocumentMoniker": "F:\\ToyEngine\\ToyEngine\\Engine\\main.cpp",
               "RelativeDocumentMoniker": "main.cpp",
               "ToolTip": "F:\\ToyEngine\\ToyEngine\\Engine\\main.cpp",
               "RelativeToolTip": "main.cpp",
-              "ViewState": "AgIAAJcAAAAAAAAAAAAAALUAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAKcAAAAAAAAAAAAAAMAAAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-05-11T11:13:40.857Z",
               "EditorCaption": ""

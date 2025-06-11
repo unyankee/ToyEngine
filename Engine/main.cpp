@@ -57,7 +57,9 @@ class EngineInstance
 	//
 	uint32_t Width = 1920;
 	uint32_t Height = 1080;
-
+	//
+	VkPipeline MeshPipeline;
+	VkPipelineLayout MeshPipelineLayout;
 	
 	// Functions //
 	// This is not the best naming
@@ -88,6 +90,10 @@ class EngineInstance
 	void createImageView();
 	//
 	void createFramebuffer();
+	//
+	void createMeshPipeline(VkShaderModule vs, VkShaderModule fs);
+	// 
+	VkShaderModule loadShader(const char* shaderPath) const;
 	
 	VkCommandPool CreateCommandPool();
 };
@@ -114,6 +120,10 @@ void EngineInstance::MainLoop()
 
 	VkCommandBuffer CommandBuffer;
 	VK_CHECK(vkAllocateCommandBuffers(Device, &AllocateInfo, &CommandBuffer));
+
+	VkShaderModule MeshVs = loadShader("Shaders/mesh.vert.spv");
+	VkShaderModule MeshFs = loadShader("Shaders/mesh.frag.spv");
+	createMeshPipeline(MeshVs, MeshFs);
 	
 	while (!glfwWindowShouldClose(window)) 
 	{
@@ -146,8 +156,14 @@ void EngineInstance::MainLoop()
 		
 		vkCmdBeginRenderPass(CommandBuffer, &RenderpassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+		VkViewport Viewport = {0,float(Height), float(Width), -float(Height), 0.0f, 1.0f};
+		vkCmdSetViewport(CommandBuffer, 0, 1, &Viewport);
 
-		// Testing goes here!!
+		VkRect2D Scissor = {0,0, (Width), (Height)};
+		vkCmdSetScissor(CommandBuffer, 0, 1, &Scissor);
+
+		vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, MeshPipeline);
+		vkCmdDraw(CommandBuffer, 3,1,0,0);
 			
 		
 		vkCmdEndRenderPass(CommandBuffer);
@@ -178,6 +194,7 @@ void EngineInstance::MainLoop()
 		PresentInfo.swapchainCount = 1;
 
 		VK_CHECK(vkQueuePresentKHR(Queue, &PresentInfo))
+		// This is bad. here just for purely testing 
 		VK_CHECK(vkDeviceWaitIdle(Device))
 	}
 }
@@ -457,6 +474,119 @@ void EngineInstance::createFramebuffer()
 		vkCreateFramebuffer(Device, &FramebufferCreateInfo, nullptr, &Framebuffer[i]);
 	}
 	
+}
+
+void EngineInstance::createMeshPipeline(VkShaderModule vs, VkShaderModule fs)
+{
+	VkPipelineLayoutCreateInfo PipelineLayoutCreateInfo {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
+	PipelineLayoutCreateInfo.flags;
+	PipelineLayoutCreateInfo.setLayoutCount;
+	PipelineLayoutCreateInfo.pSetLayouts;
+	PipelineLayoutCreateInfo.pushConstantRangeCount;
+	PipelineLayoutCreateInfo.pPushConstantRanges;
+	
+	VK_CHECK(vkCreatePipelineLayout(Device, &PipelineLayoutCreateInfo, nullptr, &MeshPipelineLayout));
+	
+	VkGraphicsPipelineCreateInfo PipelineCreateIndo = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
+	
+	VkPipelineShaderStageCreateInfo ShaderStages[2] = {};
+	ShaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	ShaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+
+	ShaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+	ShaderStages[0].module = vs;
+	ShaderStages[0].pName = "main";
+	
+	ShaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	ShaderStages[1].module = fs;
+	ShaderStages[1].pName = "main";
+	// 
+	PipelineCreateIndo.stageCount = ARRAY_SIZE(ShaderStages);
+	PipelineCreateIndo.pStages = ShaderStages;
+	//
+	// Empty, the vertex input layout will be dealt with in the shader itself
+	// there is no point on doing this, since it will make the vertex declaration
+	// way more complicated, and I want to have it explicitly in the shaders
+	// that way is way more scalable and easier to read (it should have no impact on perf)
+	VkPipelineVertexInputStateCreateInfo VertexInputStateCreateInfo = {VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
+	//
+	PipelineCreateIndo.pVertexInputState = &VertexInputStateCreateInfo;
+	//
+	VkPipelineInputAssemblyStateCreateInfo InputAssemblyCreateInfo = {VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO};
+	InputAssemblyCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	//
+	PipelineCreateIndo.pInputAssemblyState = &InputAssemblyCreateInfo;
+	//
+	VkPipelineTessellationStateCreateInfo TessellationStateCreateInfo = {VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO};
+	PipelineCreateIndo.pTessellationState = &TessellationStateCreateInfo;
+	//
+	VkPipelineViewportStateCreateInfo ViewportStateCreateInfo = {VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO};
+	ViewportStateCreateInfo.viewportCount = 1;
+	ViewportStateCreateInfo.scissorCount = 1;
+	PipelineCreateIndo.pViewportState = &ViewportStateCreateInfo;
+	//
+	VkPipelineRasterizationStateCreateInfo RasterizationStateCreateInfo = {VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO};
+	RasterizationStateCreateInfo.lineWidth = 1.0f;
+	PipelineCreateIndo.pRasterizationState = &RasterizationStateCreateInfo;
+
+	VkPipelineMultisampleStateCreateInfo MultisampleStateCreateInfo = {VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO};
+	MultisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+	PipelineCreateIndo.pMultisampleState = &MultisampleStateCreateInfo;
+
+	VkPipelineDepthStencilStateCreateInfo DepthStencilStateCreateInfo = {VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO};
+	PipelineCreateIndo.pDepthStencilState = &DepthStencilStateCreateInfo;
+	//
+	VkPipelineColorBlendAttachmentState ColorBlendAttachmentState = {};
+	ColorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	
+	VkPipelineColorBlendStateCreateInfo ColorBlendStateCreateInfo = {VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
+	ColorBlendStateCreateInfo.attachmentCount = 1;
+	ColorBlendStateCreateInfo.pAttachments = &ColorBlendAttachmentState;
+	PipelineCreateIndo.pColorBlendState = &ColorBlendStateCreateInfo;
+
+	VkDynamicState DynamicStates[2] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
+	VkPipelineDynamicStateCreateInfo DynamicStateCreateInfo = {VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
+	DynamicStateCreateInfo.dynamicStateCount = ARRAY_SIZE(DynamicStates);
+	DynamicStateCreateInfo.pDynamicStates = DynamicStates;
+	PipelineCreateIndo.pDynamicState = &DynamicStateCreateInfo;
+	
+	PipelineCreateIndo.layout = MeshPipelineLayout;
+	
+	PipelineCreateIndo.renderPass = RenderPass;
+	
+	//PipelineCreateIndo.subpass = ;
+	
+	//PipelineCreateIndo.basePipelineHandle;
+	
+	//PipelineCreateIndo.basePipelineIndex;
+	
+
+	// This should be used later,
+	// as usual now, taking shortcucts
+	VkPipelineCache pipelineCache = VK_NULL_HANDLE;
+	VK_CHECK(vkCreateGraphicsPipelines(Device, pipelineCache, 1, &PipelineCreateIndo ,nullptr, &MeshPipeline))
+}
+
+VkShaderModule EngineInstance::loadShader(const char* shaderPath) const
+{
+	FILE* file = fopen(shaderPath, "rb");
+	assert(file != nullptr);
+	fseek(file, 0, SEEK_END);
+
+	uint32_t size = ftell(file);
+	fseek(file, 0, SEEK_SET);
+		
+	char* code = new char[size];
+	fread(code, size, 1, file);
+	fclose(file);
+
+	VkShaderModuleCreateInfo ShaderModuleCreateInfo {VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
+	ShaderModuleCreateInfo.codeSize = size;
+	ShaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(code);	
+
+	VkShaderModule ShaderModule;
+	VK_CHECK(vkCreateShaderModule(Device, &ShaderModuleCreateInfo, nullptr, &ShaderModule))
+	return ShaderModule;
 }
 
 

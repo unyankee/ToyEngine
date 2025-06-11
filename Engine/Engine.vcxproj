@@ -197,6 +197,8 @@
     <None Include="..\extern\glfw\glfw-3.4\src\glfw.rc.in" />
     <None Include="..\extern\glfw\glfw-3.4\src\mappings.h.in" />
     <None Include="..\extern\glfw\glfw-3.4\src\nsgl_context.m" />
+    <None Include="Shaders\mesh.frag.glsl" />
+    <None Include="Shaders\mesh.vert.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
